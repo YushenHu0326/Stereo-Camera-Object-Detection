@@ -8,12 +8,12 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5n', pretrained=True)  # 'yol
 # Initialize stereo camera
 cap = cv2.VideoCapture(0)
 
-# Desired width and height while maintaining the aspect ratio
+# Calculate parameters to reduce the image resolution while maintaining the aspect ratio
 desired_width = 640
 aspect_ratio = 0.5 * cap.get(cv2.CAP_PROP_FRAME_WIDTH) / cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 desired_height = int(desired_width / aspect_ratio)
 
-# StereoSGBM Matcher with optimized parameters
+# Init StereoSGBM matcher
 window_size = 11
 min_disp = 0
 num_disp = 48 - min_disp
@@ -31,14 +31,14 @@ stereo = cv2.StereoSGBM_create(
 
 object_detection_frequency = 5
 frame_counter = 0
-last_results_left = None  # Store the last detection results
+last_results_left = None  # Use this to store the last detection results
 
 while True:
     ret, wide_frame = cap.read()
     if not ret:
         break
 
-    # Resize the frame while maintaining aspect ratio
+    # Lower the frame resolution
     resized_frame = cv2.resize(wide_frame, (desired_width * 2, desired_height))
 
     frame_left = resized_frame[:, :desired_width, :]
@@ -67,8 +67,6 @@ while True:
 
     cv2.imshow('Object Detection', frame_left)
     cv2.imshow('Disparity Map', disp_display)
-    # combined_frame = cv2.hconcat([frame_left, disp_display])
-    # cv2.imshow('Object Detection and Disparity Map', combined_frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
