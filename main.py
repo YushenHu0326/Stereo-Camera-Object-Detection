@@ -23,15 +23,39 @@ def getDistanceSquare2D(coord0, coord1):
     return (x1 - x0) ** 2 + (y1 - y0) ** 2
 
 def getDistance3D(coord0, coord1):
-    a = math.sqrt(coord0[0]**2 + coord0[1]**2) * pixelAngle
-    b = math.sqrt(coord1[0]**2 + coord1[1]**2) * pixelAngle
-    a = 90 - a
-    if coord0[0] * coord1[0] > 0:
-        b = 90 - b
+    #calculate x and y with the center being (0,0)
+    x0 = (coord0[0] + coord0[1]) / 2 - 640
+    y0 = (coord0[2] + coord0[3]) / 2 - 480
+    x1 = (coord1[0] + coord1[1]) / 2 - 640
+    y1 = (coord1[2] + coord1[3]) / 2 - 480
+    #calculate their angle to the camera plane
+    a = math.sqrt(x0**2 + y0**2) * pixelAngle
+    b = math.sqrt(x1**2 + y1**2) * pixelAngle
+    a = abs(90 - a)
+    b = abs(90 - b)
+    #put the object into 3 sections: section 0 is on the left of the left cam
+    #section 1 is between the left and right cams, section 2 is on the right
+    #of the right cam
+    section = 0
+    if x0 * x1 < 0:
+        section = 1
     else:
-        b = 90 + b
+        if a > b:
+            section = 2
 
-    return d * math.cos(math.radians(a)) / (math.cos(math.radians(b)) - math.cos(math.radians(a)))
+    #calculate the distance by section
+    if section == 0:
+        x = d * math.cos(math.radians(b)) / (math.cos(math.radians(a)) - math.cos(math.radians(b)))
+        y = x * math.tan(math.radians(b))
+        return math.sqrt((x+d/2)**2+y**2)
+    elif section == 2:
+        x = d * math.cos(math.radians(a)) / (math.cos(math.radians(b)) - math.cos(math.radians(a)))
+        y = x * math.tan(math.radians(a))
+        return math.sqrt((x+d/2)**2+y**2)
+    else:
+        x = d * math.cos(math.radians(a)) / (math.cos(math.radians(a)) + math.cos(math.radians(b)))
+        y = x * math.tan(math.radians(a))
+        return math.sqrt((d/2-x)**2+y**2)
 
 while(True):
     #frame: 1280x960
